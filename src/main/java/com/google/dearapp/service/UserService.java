@@ -16,11 +16,13 @@ import com.google.dearapp.dto.MatchingUser;
 import com.google.dearapp.entity.User;
 import com.google.dearapp.exception.DuplicateEmailException;
 import com.google.dearapp.exception.DuplicatePhoneException;
+import com.google.dearapp.exception.InvalidOTPException;
 import com.google.dearapp.exception.InvalidUserIdException;
 import com.google.dearapp.exception.NoActiveUsersFoundException;
 import com.google.dearapp.exception.NoBlockedUsersFoundException;
 import com.google.dearapp.exception.NoInActiveUsersFoundException;
 import com.google.dearapp.structure.ResponseStructure;
+import com.google.dearapp.util.EmailService;
 import com.google.dearapp.util.SortByAgeDifferenceAsc;
 import com.google.dearapp.util.UserGender;
 import com.google.dearapp.util.UserStatus;
@@ -29,6 +31,9 @@ import com.google.dearapp.util.UserStatus;
 public class UserService {
 	@Autowired
 	private UserDao userdao;
+	
+	@Autowired
+	private EmailService emailservice;
 
 	public ResponseStructure<User> saveUser(User user) {
 		
@@ -42,7 +47,12 @@ public class UserService {
 			throw new DuplicatePhoneException("Account Already Exist with this Phone Number"+user.getPhone() +"Please Try With New Phone Number");
 		}
 		//send email
+	
+		user.setStatus(UserStatus.IN_ACTIVE);
+		int otp=emailservice.getOTP();
+		user.setOtp(otp);
 		user=userdao.saveUser(user);
+		emailservice.sendFirstEmail(user);
 		ResponseStructure<User> rs=new ResponseStructure<>();
 		rs.setStatus(HttpStatus.OK.value());
 		rs.setMessage("User Saved Successfully");
@@ -273,8 +283,7 @@ public class UserService {
 	}
 	public ResponseStructure<List<MatchingUser>> findAllMatches(Long id, Integer top) {
 		 Optional<User> optional = userdao.findUserById(id);
-		 if(optional.isEmpty()) 
-			 throw new InvalidUserIdException("Invalid User id : "+id+", Unable To Find The Best Matches");
+		 if(optional.isEmpty()) throw new InvalidUserIdException("Invalid User id : "+id+", Unable To Find The Best Matches");
 		User user = optional.get();
 		UserGender gender = user.getGender();
 //		System.out.println(gender.equals(UserGender.MALE)?UserGender.FEMALE:UserGender.MALE);
@@ -287,13 +296,13 @@ public class UserService {
 //		 printCollection(users);
 		 List<MatchingUser> matchingUsers=new ArrayList<>();
 		 for(User u:users) {
-			 MatchingUser mu=new MatchingUser(); 
-			 mu.setName(u.getName());
-			 mu.setAge(u.getAge());
-			 mu.setInterset(u.getInterests());
-			 mu.setAgeDifference(Math.abs(user.getAge()-u.getAge()));
-			 mu.setMatchingInterestCount(countInterset(user.getInterests(),u.getInterests()));
-			 mu.setGender(u.getGender());
+			 MatchingUser mu=new MatchingUser(u.getName(), u.getAge(), u.getGender(), u.getInterests(), Math.abs(user.getAge()-u.getAge()), countInterset(user.getInterests(),u.getInterests())); 
+//			 mu.setName(u.getName());
+//			 mu.setAge(u.getAge());
+//			 mu.setInterset(u.getInterests());
+//			 mu.setAgeDifference(Math.abs(user.getAge()-u.getAge()));
+//			 mu.setMatchingInterestCount(countInterset(user.getInterests(),u.getInterests()));
+//			 mu.setGender(u.getGender());
 			 matchingUsers.add(mu); 
 		 }
 //		 printCollection(matchingUsers);
@@ -315,6 +324,25 @@ public class UserService {
 	      for(Object o:c) {
 	    	  System.out.println(o);
 	      }	
+	}
+
+	public ResponseStructure<User> verifyOTP(Long id, int otp) {
+	 Optional<User> optional =userdao.findUserById(id);
+	 if(optional.isEmpty()) {
+		 throw new InvalidUserIdException("Invalid user id : "+id+"Unable to verify user OTP :"+otp);
+		 
+	 }
+	 User user = optional.get();
+	 if(otp !=user.getOtp()) {
+		 throw new InvalidOTPException("Invalid OTP :"+otp+"Unable To Verify User");
+	 }
+	 user.setStatus(UserStatus.ACTIVE);
+	 user=userdao.saveUser(user);
+	 ResponseStructure<User> rs=new ResponseStructure<>();
+	 rs.setStatus(HttpStatus.OK.value());
+	 rs.setMessage("User Found Successfully");
+	 rs.setBody(user);
+		return rs;
 	}
 	
 	

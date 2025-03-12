@@ -45,6 +45,7 @@ public class User {
 	private UserStatus status=UserStatus.ACTIVE;
 	@ElementCollection
 	private List<String> interests;
+	private int otp;
 	
 	
 

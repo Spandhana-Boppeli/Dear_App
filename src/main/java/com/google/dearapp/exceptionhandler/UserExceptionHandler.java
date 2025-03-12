@@ -7,6 +7,7 @@ import org.springframework.web.util.InvalidUrlException;
 
 import com.google.dearapp.exception.DuplicateEmailException;
 import com.google.dearapp.exception.DuplicatePhoneException;
+import com.google.dearapp.exception.InvalidOTPException;
 import com.google.dearapp.exception.InvalidUserIdException;
 import com.google.dearapp.exception.NoActiveUsersFoundException;
 import com.google.dearapp.exception.NoBlockedUsersFoundException;
@@ -68,6 +69,16 @@ public class UserExceptionHandler {
 		rs.setBody(e.getMessage());
 		return rs;
 	}
+	
+	@ExceptionHandler(InvalidOTPException.class)
+	public ResponseStructure<String> invalidOTPExceptionHandler(InvalidOTPException e){
+		ResponseStructure<String> rs= new ResponseStructure<>();
+		rs.setStatus(HttpStatus.NOT_FOUND.value());
+		rs.setMessage("invalid otp ");
+		rs.setBody(e.getMessage());
+		return rs;
+	}
+	
 	
 	
 	

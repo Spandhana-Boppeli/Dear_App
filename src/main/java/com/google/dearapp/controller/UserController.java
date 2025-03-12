@@ -120,6 +120,12 @@ public class UserController {
 //	}
 	
 	
+	@PatchMapping("/verifyotp/{id}/{otp}")
+	public ResponseStructure<User> verifyOTP(@PathVariable (name="id") Long id,@PathVariable(name="otp") int otp){
+		return service.verifyOTP(id,otp);
+	}
+	
+	
 
 	
 		
