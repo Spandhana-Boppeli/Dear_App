@@ -22,7 +22,7 @@ public class EmailService {
 			helper.setTo(u.getEmail());
 			helper.setSubject("Welcome Dear! Account Created Successfully");
 			helper.setText("Dear "+u.getName()+", Your Account has been Created Successfully.Find The Best Matches");
-			helper.setText("Dear "+u.getName()+", Your Account Created ,your otp is :"+u.getOtp()+" start your journey ");
+			helper.setText("Dear "+u.getName()+", Your Account has been Created Successfully,and here is your otp  :"+u.getOtp()+" start your Journey and find the best Matches from DEARAPP.Thank You for Registering");
 			
 			
 		} catch (MessagingException e) {
